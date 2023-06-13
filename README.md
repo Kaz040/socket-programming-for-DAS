@@ -1,6 +1,5 @@
-<div align="center">
-  # socket-programming-for-DAS
-</div>
+# socket-programming-for-DAS
+
 
 The aim of this project is to exhibit the concepts that has been discussed in Digital Automation System class and übung. 
 This project is intended to on one hand 
@@ -13,4 +12,9 @@ This project is intended to on one hand
   <li>Show how different services can be defined</>
 </ul> 
 
-and on the other hand.....
+and on the other hand
+<ul>
+  <li>show how router route messages</li>
+  <li>show simple network setup</li>
+  <li>show how a device from one subnet can be reached through from anohter subnet</li>
+</ul>
