@@ -20,4 +20,4 @@ and on the other hand
 
 ![](https://github.com/Kaz040/socket-programming-for-DAS/blob/main/client%20-%20server.png)
 
-The figure above shows the architecture of the project. communication is established over tcp network
+The figure above shows the architecture of the project. communication is established over tcp network....
