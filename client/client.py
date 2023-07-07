@@ -27,7 +27,16 @@ def message_listener(client_network):
                     friend_list.append((data[0],data[1]))
                     print(friend_list)
                 elif data[2] == "2":
-                    print(f"[{data[0]}, {data[1]}]: {data[3]}")
+                    if len(data) > 4:
+                        newData = ""
+                        for extractedData in data[3:]:
+                            if extractedData[0] == " ":
+                                newData = newData + extractedData[1:]
+                            else: 
+                                newData = newData + extractedData
+                        print(f"[{data[0]}, {data[1]}]: {newData}")
+                    else:
+                        print(f"[{data[0]}, {data[1]}]: {data[3]}")
             
 
         except KeyboardInterrupt:
