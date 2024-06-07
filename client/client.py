@@ -1,52 +1,99 @@
 import socket
 import threading
-client_network = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-friend_list = []
+
+# CONSTANTS
+header = 2048
+encodeFormat = "utf-8"
+disconnectMessage = "!DISCONNECT"
 
 
-#server_IP = str(input("Enter Server IP: "))
+# Members
+members = []
 
-#server_port = int(input("Enter Server Port "))
+# MessageType
+directMessage = "DM"
+onlineMembers = "OM"
 
-def message_sender(client):
+# server information
+serverIP = "141.44.219.53"
+port = 14550
 
-    while True:
-        client_index = int(input())
-        message_to_send = input()
-        client_to_message = friend_list[client_index]
-        client.send(bytes(f"{client_to_message[0]}|{client_to_message[1]}|2|{message_to_send}", "utf-8"))
+conn = None
+# setup socket
+clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-def message_listener(client_network):
-    while True:
+# connect to server
+clientSocket.connect((serverIP, port))
+
+
+def sendMessage(message2Send, recipient, Type):
+
+    message = f"{Type} | {recipient} | {message2Send}".encode(encodeFormat)
+    clientSocket.send(message)
+
+
+threadAlive = True
+
+
+def incommingMessage():
+
+    while threadAlive:
+
+        data = clientSocket.recv(header)
+
+        messageReceived = data.decode(encodeFormat)
+        if messageReceived:
+            messageReceived = messageReceived.split("|")
+
+            # online member message
+            if messageReceived[0] == onlineMembers:
+                members.append(messageReceived[2])
+
+            # direct message
+            if messageReceived[0] == directMessage:
+                print(f"MESSAGE: From {messageReceived[1]}: {messageReceived[2]}")
+
+
+disconnect = False
+
+while not disconnect:
+
+    option = str(
+        input(
+            "Press 'C' to Connect, 'S' to Send Message 'D' to disconnect and L to view online members: "
+        )
+    )
+
+    if (option.lower() == "c") and (conn is None):
         try:
-            data_received = client_network.recv(1024)
-            data = data_received.decode("utf-8")
-            if data != "":
-                data = data.split("|")
-                if data[2] == "1":
-                    friend_list.append((data[0],data[1]))
-                    print(friend_list)
-                elif data[2] == "2":
-                    if len(data) > 4:
-                        newData = ""
-                        for extractedData in data[3:]:
-                            if extractedData[0] == " ":
-                                newData = newData + extractedData[1:]
-                            else: 
-                                newData = newData + extractedData
-                        print(f"[{data[0]}, {data[1]}]: {newData}")
-                    else:
-                        print(f"[{data[0]}, {data[1]}]: {data[3]}")
-            
+            clientSocket.connect((serverIP, port))
+            print("Connection Successful!!!")
 
-        except KeyboardInterrupt:
-            client.close()
+            thread = threading.Thread(target=incommingMessage)
+            thread.start()
 
+        except Exception as e:
+            print(e)
 
-client_network.connect(('192.168.0.103', 14500))
-messageListenerThread = threading.Thread(target=message_listener, args=(client_network, ))
-messageListenerThread.start()
+    elif (option.lower() == "c") and (conn is not None):
+        print("A connection has already been established...")
 
-message_sender(client_network)
+    else:
+        print("You Must Connect first before doing other processes")
 
-    
+    if option.lower() == "s":
+        Type = directMessage
+        recipient = str(input("Choose message recipient: "))
+        message = str(input("Type a Message: "))
+        sendMessage(message, recipient, Type)
+
+    if option.lower() == "d":
+        disconnect = True
+        threadAlive = False
+
+    if option.lower() == "l":
+        Type = onlineMembers
+        recipient = ""
+        message = "onlineMembers"
+        members.clear()
+        sendMessage(message, recipient, Type)
