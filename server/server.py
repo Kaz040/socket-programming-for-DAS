@@ -1,16 +1,18 @@
 import socket
 import threading
-
+import time
 
 # [CONSTANTS]
 
 # clients list
 clients_list = []
 
-
+# MessageType
+directMessage = "DM"
+onlineMembers = "OM"
 
 # message information
-header = 2048
+header = 20480
 decodeFormat = "utf-8"
 disconnect = "!DISCONNECT"
 
@@ -23,9 +25,6 @@ port = 14550
 serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 serverSocket.bind((serverIP, port))
 
-def getActiveConnection():
-
-    pass
 
 def handle_connection(conn, addr):
     print(f"[NEW COONECTION] {addr} connected.")
@@ -38,24 +37,38 @@ def handle_connection(conn, addr):
     client_object["conn"] = conn
     client_object["addr"] = str(addr)
     clients_list.append(client_object)
-    print(f"On Connection: {clients_list}")
     print(f"[ACTIVE CONNECTIONS] {len(clients_list)}")
 
     connected = True
 
     while connected:
         msg = conn.recv(header).decode(decodeFormat)
+        msg = str(msg)
         if msg == disconnect:
             print(f"[{addr}] is disconnecting...")
-            print(f"Before Removing: {clients_list}")
             for client in clients_list:
                 if client["addr"] == str(addr):
                     clients_list.remove(client)
-                    print(f"After Removing: {clients_list}")
+                    
                     connected = False
                 
-        elif msg:    
-            print(f"[{addr}] {msg}")
+        elif msg:
+            message = msg.split("|")
+            if message[0] == directMessage:
+                for client in clients_list:
+                    if client["addr"] == message[1]:
+                        forwardConnection = client["conn"]
+                        message[1] = str(addr)
+                        msg = f"{message[0]}|{message[1]}|{message[2]}".encode(decodeFormat)
+                        forwardConnection.send(msg)
+            
+            if str(message[0]) == onlineMembers:
+                for client in clients_list:
+                    time.sleep(0.2)
+                    clientMembers2String = client["addr"]
+                    msg = f"{message[0]}|{message[1]}|{clientMembers2String}".encode(decodeFormat)
+                    conn.send(msg)
+                
 
     print(f"INFO: [{addr}] is disconnected")
     print(f"[ACTIVE CONNECTIONS] {len(clients_list)}")

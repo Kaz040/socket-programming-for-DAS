@@ -6,6 +6,9 @@ header = 2048
 encodeFormat = "utf-8"
 disconnectMessage = "!DISCONNECT"
 
+#Thread breakers
+threadAlive = True
+disconnect = False
 
 # Members
 members = []
@@ -15,32 +18,30 @@ directMessage = "DM"
 onlineMembers = "OM"
 
 # server information
-serverIP = "141.44.219.53"
+serverIP = "192.168.178.21"
 port = 14550
 
-conn = None
+conn = False
+
 # setup socket
 clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # connect to server
-clientSocket.connect((serverIP, port))
+#clientSocket.connect((serverIP, port))
 
 
 def sendMessage(message2Send, recipient, Type):
 
-    message = f"{Type} | {recipient} | {message2Send}".encode(encodeFormat)
+    message = f"{Type}|{recipient}|{message2Send}".encode(encodeFormat)
     clientSocket.send(message)
 
 
-threadAlive = True
 
 
 def incommingMessage():
 
     while threadAlive:
-
         data = clientSocket.recv(header)
-
         messageReceived = data.decode(encodeFormat)
         if messageReceived:
             messageReceived = messageReceived.split("|")
@@ -48,13 +49,16 @@ def incommingMessage():
             # online member message
             if messageReceived[0] == onlineMembers:
                 members.append(messageReceived[2])
+                
+                
+        
 
             # direct message
             if messageReceived[0] == directMessage:
                 print(f"MESSAGE: From {messageReceived[1]}: {messageReceived[2]}")
 
 
-disconnect = False
+
 
 while not disconnect:
 
@@ -64,10 +68,11 @@ while not disconnect:
         )
     )
 
-    if (option.lower() == "c") and (conn is None):
+    if (option.lower() == "c") and not conn:
         try:
             clientSocket.connect((serverIP, port))
             print("Connection Successful!!!")
+            conn =  True
 
             thread = threading.Thread(target=incommingMessage)
             thread.start()
@@ -75,25 +80,29 @@ while not disconnect:
         except Exception as e:
             print(e)
 
-    elif (option.lower() == "c") and (conn is not None):
+    elif (option.lower() == "c") and conn:
         print("A connection has already been established...")
 
-    else:
+    elif(option.lower() != 'c') and not conn:
         print("You Must Connect first before doing other processes")
 
     if option.lower() == "s":
         Type = directMessage
-        recipient = str(input("Choose message recipient: "))
+        print(f"Members : {members}\n")
+        recipientIndex = int(input("Choose message recipient: "))
+        recipient = members[recipientIndex]
         message = str(input("Type a Message: "))
         sendMessage(message, recipient, Type)
 
     if option.lower() == "d":
+        message = clientSocket.send(disconnectMessage.encode(encodeFormat))
         disconnect = True
         threadAlive = False
+        conn = False
 
     if option.lower() == "l":
         Type = onlineMembers
         recipient = ""
-        message = "onlineMembers"
+        message = ""
         members.clear()
         sendMessage(message, recipient, Type)
