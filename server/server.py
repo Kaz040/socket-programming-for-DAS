@@ -1,29 +1,18 @@
 import socket
 import threading
 import time
+import constants
 
 # [CONSTANTS]
 
 # clients list
 clients_list = []
 
-# MessageType
-directMessage = "DM"
-onlineMembers = "OM"
 
-# message information
-header = 20480
-decodeFormat = "utf-8"
-disconnect = "!DISCONNECT"
-
-
-# server information
-serverIP = socket.gethostbyname(socket.gethostname())
-port = 14550
 
 # socket instance
 serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-serverSocket.bind((serverIP, port))
+serverSocket.bind((constants.serverIP, constants.port))
 
 
 def handle_connection(conn, addr):
@@ -42,9 +31,9 @@ def handle_connection(conn, addr):
     connected = True
 
     while connected:
-        msg = conn.recv(header).decode(decodeFormat)
+        msg = conn.recv(constants.header).decode(constants.format)
         msg = str(msg)
-        if msg == disconnect:
+        if msg == constants.disconnect:
             print(f"[{addr}] is disconnecting...")
             for client in clients_list:
                 if client["addr"] == str(addr):
@@ -54,19 +43,19 @@ def handle_connection(conn, addr):
                 
         elif msg:
             message = msg.split("|")
-            if message[0] == directMessage:
+            if message[0] == constants.directMessage:
                 for client in clients_list:
                     if client["addr"] == message[1]:
                         forwardConnection = client["conn"]
                         message[1] = str(addr)
-                        msg = f"{message[0]}|{message[1]}|{message[2]}".encode(decodeFormat)
+                        msg = f"{message[0]}|{message[1]}|{message[2]}".encode(constants.format)
                         forwardConnection.send(msg)
             
-            if str(message[0]) == onlineMembers:
+            if str(message[0]) == constants.onlineMembers:
                 for client in clients_list:
                     time.sleep(0.2)
                     clientMembers2String = client["addr"]
-                    msg = f"{message[0]}|{message[1]}|{clientMembers2String}".encode(decodeFormat)
+                    msg = f"{message[0]}|{message[1]}|{clientMembers2String}".encode(constants.format)
                     conn.send(msg)
                 
 
@@ -78,7 +67,7 @@ def handle_connection(conn, addr):
 def startServer():
     serverSocket.listen(4)
     print("[STARTING] server is starting")
-    print(f"[LISTENING] Server is listening on {serverIP}")
+    print(f"[LISTENING] Server is listening on {constants.serverIP}")
     while True:
         conn, addr = serverSocket.accept()
         thread = threading.Thread(target=handle_connection, args=(conn, addr))

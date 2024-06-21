@@ -1,21 +1,16 @@
 import socket
 import threading
+import constants
 
-# CONSTANTS
-header = 2048
-encodeFormat = "utf-8"
-disconnectMessage = "!DISCONNECT"
+
 
 #Thread breakers
 threadAlive = True
-disconnect = False
+exitProgram = False
 
 # Members
 members = []
 
-# MessageType
-directMessage = "DM"
-onlineMembers = "OM"
 
 # server information
 serverIP = "192.168.178.21"
@@ -32,7 +27,7 @@ clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 def sendMessage(message2Send, recipient, Type):
 
-    message = f"{Type}|{recipient}|{message2Send}".encode(encodeFormat)
+    message = f"{Type}|{recipient}|{message2Send}".encode(constants.format)
     clientSocket.send(message)
 
 
@@ -41,26 +36,26 @@ def sendMessage(message2Send, recipient, Type):
 def incommingMessage():
 
     while threadAlive:
-        data = clientSocket.recv(header)
-        messageReceived = data.decode(encodeFormat)
+        data = clientSocket.recv(constants.header)
+        messageReceived = data.decode(constants.format)
         if messageReceived:
             messageReceived = messageReceived.split("|")
 
             # online member message
-            if messageReceived[0] == onlineMembers:
+            if messageReceived[0] == constants.onlineMembers:
                 members.append(messageReceived[2])
                 
                 
         
 
             # direct message
-            if messageReceived[0] == directMessage:
+            if messageReceived[0] == constants.directMessage:
                 print(f"MESSAGE: From {messageReceived[1]}: {messageReceived[2]}")
 
 
 
 
-while not disconnect:
+while not exitProgram:
 
     option = str(
         input(
@@ -87,7 +82,7 @@ while not disconnect:
         print("You Must Connect first before doing other processes")
 
     if option.lower() == "s":
-        Type = directMessage
+        Type = constants.directMessage
         print(f"Members : {members}\n")
         recipientIndex = int(input("Choose message recipient: "))
         recipient = members[recipientIndex]
@@ -95,13 +90,13 @@ while not disconnect:
         sendMessage(message, recipient, Type)
 
     if option.lower() == "d":
-        message = clientSocket.send(disconnectMessage.encode(encodeFormat))
-        disconnect = True
+        message = clientSocket.send(constants.disconnect.encode(constants.format))
+        exitProgram = True
         threadAlive = False
         conn = False
 
     if option.lower() == "l":
-        Type = onlineMembers
+        Type = constants.onlineMembers
         recipient = ""
         message = ""
         members.clear()
